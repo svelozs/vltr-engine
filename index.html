@@ -3,121 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Web System Core</title>
+    <title>VLTR Engine</title>
     
+    <!-- Modos PWA / Pantalla completa para eliminar barras de navegación en iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+
     <style>
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
         }
         body, html {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100dvh; /* Utiliza Dynamic Viewport Height para evitar la barra de Safari */
             background-color: #000;
             overflow: hidden;
             touch-action: none;
+            display: flex;
+            flex-direction: column;
         }
-        #game {
+
+        /* --- CONTENEDOR DE PANTALLAS NDS (75% DE LA PANTALLA) --- */
+        #game-container {
             width: 100vw;
-            height: 100vh;
+            height: 75dvh;
             position: relative;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* --- 1. ÁREA DE PANTALLAS NDS (55% SUPERIOR) --- */
-        #game canvas {
-            max-height: 55vh !important;
-            width: 100vw !important;
+        /* Lienzo de juego (Canvas nativo de NDS) */
+        #game-container canvas {
+            max-width: 100% !important;
+            max-height: 100% !important;
             object-fit: contain !important;
-            position: absolute !important;
-            top: 1vh !important;
-            left: 0 !important;
-            pointer-events: auto !important; /* Habilita el toque directo como Stylus */
+            pointer-events: auto !important; /* Mantiene activa la pantalla táctil de NDS */
             touch-action: none !important;
-            image-rendering: pixelated !important;
-            z-index: 10 !important;
         }
 
-        /* --- 2. OCULTAR MENÚS SECUNDARIOS --- */
+        /* --- ÁREA DE CONTROLES INFERIOR (25% DE LA PANTALLA) --- */
+        #controls-container {
+            width: 100vw;
+            height: 25dvh;
+            background-color: #0a0a0a;
+            border-top: 1px solid #222;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+        }
+
+        /* SPLASH SCREEN (Resuelve la política de AudioContext de Safari) */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100dvh;
+            background-color: #000;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            font-family: system-ui, -apple-system, sans-serif;
+            cursor: pointer;
+        }
+
+        /* Ocultar elementos sobrantes de EmulatorJS */
         #ejs-menu, .ejs-footer, .ejs-header {
             display: none !important;
-        }
-
-        /* --- 3. ÁREA DE BOTONES (45% INFERIOR - SIN TRASLAPE) --- */
-        #ejs-controls, #ejs-buttons {
-            pointer-events: none !important;
-            z-index: 20 !important;
-        }
-
-        /* Habilitar interacción solo en los botones físicos */
-        #ejs-buttons button, #ejs-dpad, #ejs-abxy {
-            pointer-events: auto !important;
-            background: rgba(255, 255, 255, 0.15) !important;
-            border: 2px solid rgba(255, 255, 255, 0.4) !important;
-            border-radius: 50% !important;
-            color: #fff !important;
-        }
-
-        /* Posición de la Cruceta */
-        #ejs-dpad {
-            position: absolute !important;
-            left: 5vw !important;
-            bottom: 7vh !important;
-            transform: scale(1.1) !important;
-        }
-
-        /* Posición de los botones A, B, X, Y */
-        #ejs-abxy {
-            position: absolute !important;
-            right: 5vw !important;
-            bottom: 7vh !important;
-            transform: scale(1.1) !important;
-        }
-
-        /* Posición de L y R (Justo debajo de la pantalla inferior) */
-        #EJS_NDS_L { 
-            position: absolute !important; 
-            left: 5vw !important; 
-            top: 57vh !important; 
-            bottom: auto !important; 
-        }
-        #EJS_NDS_R { 
-            position: absolute !important; 
-            right: 5vw !important; 
-            top: 57vh !important; 
-            bottom: auto !important; 
-        }
-
-        /* Posición de Start y Select */
-        #EJS_NDS_START { 
-            position: absolute !important; 
-            left: 36vw !important; 
-            bottom: 3vh !important; 
-            transform: scale(0.85) !important;
-        }
-        #EJS_NDS_SELECT { 
-            position: absolute !important; 
-            left: 52vw !important; 
-            bottom: 3vh !important; 
-            transform: scale(0.85) !important;
         }
     </style>
 </head>
 <body>
 
-    <div id="game"></div>
+    <!-- Pantalla de inicio -->
+    <div id="splash-screen" onclick="bootSystem()">
+        <h1 style="font-size: 1.1rem; letter-spacing: 2px;">VLTR ENGINE</h1>
+        <p style="font-size: 0.8rem; color: #666;">TOCA PARA INICIAR</p>
+    </div>
+
+    <!-- Área del Juego (75%) -->
+    <div id="game-container">
+        <div id="game" style="width:100%; height:100%;"></div>
+    </div>
+
+    <!-- Área de Controles Custom (25%) -->
+    <div id="controls-container">
+        <!-- Espacio reservado para los botones personalizados -->
+    </div>
 
     <script>
-        EJS_player = '#game';
-        EJS_core = 'nds';
-        EJS_gameName = 'System Core';
-        EJS_color = '#151515';
-        EJS_startOnLoaded = true;
-        EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-        EJS_gameUrl = 'roms/sys_data_01.dat';
-    </script>
-    <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
+        function bootSystem() {
+            // 1. Ocultar Splash
+            document.getElementById('splash-screen').style.display = 'none';
 
+            // 2. Definir variables de configuración
+            window.EJS_player = '#game';
+            window.EJS_core = 'nds';
+            window.EJS_gameName = 'System Core';
+            window.EJS_color = '#000000';
+            window.EJS_startOnLoaded = true;
+            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+            window.EJS_gameUrl = 'roms/sys_data_01.dat';
+            window.EJS_defaultMenu = false;
+
+            // 3. Inyección diferida del script para bypass de autoplay
+            const loaderScript = document.createElement('script');
+            loaderScript.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+            document.body.appendChild(loaderScript);
+        }
+    </script>
 </body>
 </html>
