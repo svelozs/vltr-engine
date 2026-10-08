@@ -2,8 +2,11 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Web System Core</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <style>
         body, html {
             margin: 0;
@@ -12,6 +15,8 @@
             height: 100%;
             background-color: #000;
             overflow: hidden;
+            touch-action: none; 
+            -webkit-tap-highlight-color: transparent;
         }
         #game {
             width: 100vw;
@@ -31,6 +36,67 @@
         EJS_startOnLoaded = true;
         EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
         EJS_gameUrl = 'roms/sys_data_01.dat';
+
+        EJS_modifyInterface = `
+            /* Ocultar barra superior y pie de página */
+            #ejs-menu, .ejs-footer {
+                display: none !important;
+            }
+
+            /* Permite que el toque atraviese el contenedor de botones transparente */
+            #ejs-buttons, #ejs-controls {
+                pointer-events: none !important;
+                opacity: 0.85 !important;
+            }
+
+            /* Activa los toques ÚNICAMENTE en los botones físicos */
+            #ejs-buttons button, #ejs-dpad, #ejs-abxy {
+                pointer-events: auto !important;
+                background: rgba(255, 255, 255, 0.12) !important;
+                border: 2px solid rgba(255, 255, 255, 0.4) !important;
+                border-radius: 50% !important;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
+                color: #fff !important;
+                font-family: sans-serif !important;
+                font-weight: bold !important;
+            }
+
+            #ejs-buttons button:active {
+                background: rgba(255, 255, 255, 0.4) !important;
+                transform: scale(0.95);
+            }
+
+            /* Posicionamiento táctil ergonómico */
+            #ejs-dpad {
+                left: 8vw !important;
+                bottom: 12vh !important;
+                transform: scale(1.2) !important;
+            }
+
+            #ejs-abxy {
+                right: 8vw !important;
+                bottom: 12vh !important;
+                transform: scale(1.2) !important;
+            }
+
+            #EJS_NDS_START, #EJS_NDS_SELECT, #EJS_NDS_L, #EJS_NDS_R {
+                transform: scale(0.8) !important;
+                pointer-events: auto !important;
+            }
+
+            #EJS_NDS_START { left: 38vw !important; bottom: 4vh !important; }
+            #EJS_NDS_SELECT { left: 54vw !important; bottom: 4vh !important; }
+            #EJS_NDS_L { left: 4vw !important; top: 8vh !important; bottom: unset !important; }
+            #EJS_NDS_R { right: 4vw !important; top: 8vh !important; bottom: unset !important; }
+
+            /* La pantalla (Canvas) recibe los toques táctiles como Stylus */
+            canvas {
+                pointer-events: auto !important;
+                touch-action: none !important;
+                image-rendering: pixelated !important;
+                object-fit: contain !important;
+            }
+        `;
     </script>
     <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
 
