@@ -3,11 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>VLTR Custom Console</title>
+    <title>VLTR Dual Screen Console</title>
     
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
     <style>
         * {
             box-sizing: border-box;
@@ -28,73 +25,64 @@
             align-items: center;
         }
 
-        /* CONTENEDOR PRINCIPAL DE LA CARCASA (Mantiene la proporción del teléfono) */
-        #console-container {
+        /* CARCASA / SKIN DE FONDO */
+        #console-wrapper {
             position: relative;
             width: 100vw;
             height: 100dvh;
-            max-width: 430px; /* Tamaño máximo iPhone Pro Max */
+            max-width: 430px;
             background: url('assets/skin.png') no-repeat center center;
-            background-size: contain; /* O cover según la imagen */
+            background-size: contain;
         }
 
-        /* --- 1. PANTALLAS DEL JUEGO (DENTRO DE LOS MARCOS) --- */
-        #game-screen {
+        /* EMULADOR FUENTE (OCULTO EN SEGUNDO PLANO) */
+        #emulator-hidden {
             position: absolute;
-            top: 2%;         /* AJUSTAR: Distancia desde arriba */
-            left: 10%;        /* AJUSTAR: Distancia desde la izquierda */
-            width: 80%;       /* AJUSTAR: Ancho de las pantallas */
-            height: 52%;      /* AJUSTAR: Alto total de las dos pantallas de NDS */
-            pointer-events: auto;
-            z-index: 5;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+            overflow: hidden;
         }
 
-        #game-screen canvas {
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: fill !important;
-        }
-
-        /* --- 2. ÁREAS TÁCTILES INVISIBLES (HITBOXES) --- */
-        .touch-zone {
+        /* --- 1. PANTALLA SUPERIOR SEPARADA --- */
+        #top-screen {
             position: absolute;
-            z-index: 10;
+            top: 3.5%;        /* Posición dentro del marco superior */
+            left: 11.5%;
+            width: 77%;
+            height: 31%;
+            background-color: #000;
+            border-radius: 4px;
+        }
+
+        /* --- 2. PANTALLA INFERIOR TÁCTIL SEPARADA --- */
+        #bottom-screen {
+            position: absolute;
+            top: 40.5%;       /* Posición dentro del marco inferior */
+            left: 11.5%;
+            width: 77%;
+            height: 31%;
+            background-color: #000;
+            border-radius: 4px;
+            touch-action: none;
             cursor: pointer;
         }
 
-        /* ========================================================
-           MODO CALIBRACIÓN: Cambia a 'transparent' cuando termines
-           ======================================================== */
-        .debug-mode .touch-zone {
-            background: rgba(255, 0, 0, 0.4) !important;
-            border: 1px solid red !important;
+        /* --- 3. BOTONES INVISIBLES SOBRE LA CARCASA --- */
+        .touch-zone {
+            position: absolute;
+            z-index: 20;
         }
 
-        /* --- 3. COORDENADAS EXACTAS DE LOS BOTONES --- */
-        /* Ajusta estos valores % según la carcasa que estés usando */
+        /* MODO DEBUG: Descomenta si quieres ver las cajas de los botones en rojo */
+        /* .touch-zone { background: rgba(255, 0, 0, 0.3); border: 1px solid red; } */
 
-        /* CRUCETA (D-PAD) */
-        #btn-dpad {
-            top: 75%;
-            left: 7%;
-            width: 32%;
-            height: 16%;
-            border-radius: 20%;
-        }
-
-        /* BOTONES DE ACCIÓN (ABXY) */
+        #btn-dpad { top: 75%; left: 7%; width: 32%; height: 16%; }
         #btn-a { top: 81%; left: 81%; width: 13%; height: 6.5%; border-radius: 50%; }
         #btn-b { top: 88.5%; left: 72%; width: 13%; height: 6.5%; border-radius: 50%; }
         #btn-x { top: 73.5%; left: 72%; width: 13%; height: 6.5%; border-radius: 50%; }
         #btn-y { top: 81%; left: 63%; width: 13%; height: 6.5%; border-radius: 50%; }
-
-        /* GATILLOS SUPERIORES L y R */
-        #btn-l { top: 38%; left: 5%; width: 18%; height: 4%; }
-        #btn-r { top: 38%; right: 5%; width: 18%; height: 4%; }
-
-        /* START Y SELECT (- y +) */
-        #btn-minus { top: 65%; left: 5%; width: 10%; height: 5%; }
-        #btn-plus { top: 65%; right: 5%; width: 10%; height: 5%; }
 
         /* SPLASH SCREEN DE ENCENDIDO */
         #splash-screen {
@@ -108,36 +96,79 @@
         }
     </style>
 </head>
-<body class="debug-mode"> <!-- QUITA 'debug-mode' PARA OCULTAR LOS CUADROS ROJOS -->
+<body>
 
-    <!-- Pantalla de inicio para desbloquear audio en iOS -->
+    <!-- Pantalla de inicio -->
     <div id="splash-screen" onclick="bootCartridge()">
         <h2>VLTR SYSTEM</h2>
         <p style="color:#888;">TOCA PARA ENCENDER</p>
     </div>
 
-    <!-- CARCASA DE NINTENDO DS -->
-    <div id="console-container">
+    <!-- CARCASA Y PANTALLAS SEPARADAS -->
+    <div id="console-wrapper">
 
-        <!-- Área de las pantallas de la NDS -->
-        <div id="game-screen">
-            <div id="game" style="width:100%; height:100%;"></div>
-        </div>
+        <!-- Pantalla 1: Superior -->
+        <canvas id="top-screen" width="256" height="192"></canvas>
 
-        <!-- Botones Invisibles colocados encima de la carcasa -->
+        <!-- Pantalla 2: Inferior (Táctil) -->
+        <canvas id="bottom-screen" width="256" height="192"></canvas>
+
+        <!-- Botones invisibles sobre la carcasa -->
         <div id="btn-dpad" class="touch-zone"></div>
         <div id="btn-a" class="touch-zone"></div>
         <div id="btn-b" class="touch-zone"></div>
         <div id="btn-x" class="touch-zone"></div>
         <div id="btn-y" class="touch-zone"></div>
-        <div id="btn-l" class="touch-zone"></div>
-        <div id="btn-r" class="touch-zone"></div>
-        <div id="btn-minus" class="touch-zone"></div>
-        <div id="btn-plus" class="touch-zone"></div>
 
     </div>
 
+    <!-- Emulador corriendo oculto en el fondo -->
+    <div id="emulator-hidden">
+        <div id="game"></div>
+    </div>
+
     <script>
+        const topCanvas = document.getElementById('top-screen');
+        const bottomCanvas = document.getElementById('bottom-screen');
+        const topCtx = topCanvas.getContext('2d');
+        const bottomCtx = bottomCanvas.getContext('2d');
+
+        function startScreenSlicing() {
+            function renderFrame() {
+                // Busca el lienzo que genera el emulador en segundo plano
+                const sourceCanvas = document.querySelector('#game canvas');
+                
+                if (sourceCanvas && sourceCanvas.width > 0) {
+                    // Recorta los 256x192 superiores -> Pantalla de Arriba
+                    topCtx.drawImage(sourceCanvas, 0, 0, 256, 192, 0, 0, 256, 192);
+                    
+                    // Recorta los 256x192 inferiores -> Pantalla Táctil
+                    bottomCtx.drawImage(sourceCanvas, 0, 192, 256, 192, 0, 0, 256, 192);
+                }
+                
+                requestAnimationFrame(renderFrame);
+            }
+            renderFrame();
+        }
+
+        // REDIRECCIÓN TÁCTIL EXACTA: Al tocar la pantalla inferior visible, manda el toque a la NDS
+        bottomCanvas.addEventListener('pointerdown', (e) => {
+            const sourceCanvas = document.querySelector('#game canvas');
+            if (!sourceCanvas) return;
+
+            const rect = bottomCanvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width * sourceCanvas.width;
+            // Sumamos la mitad del alto para apuntar a la pantalla inferior del emulador
+            const y = ((e.clientY - rect.top) / rect.height * (sourceCanvas.height / 2)) + (sourceCanvas.height / 2);
+
+            const touchEvent = new MouseEvent('mousedown', {
+                clientX: sourceCanvas.getBoundingClientRect().left + x,
+                clientY: sourceCanvas.getBoundingClientRect().top + y,
+                bubbles: true
+            });
+            sourceCanvas.dispatchEvent(touchEvent);
+        });
+
         function bootCartridge() {
             document.getElementById('splash-screen').style.display = 'none';
 
@@ -152,6 +183,10 @@
 
             const script = document.createElement('script');
             script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+            script.onload = () => {
+                // Inicia la división de pantallas una vez cargado el motor
+                setTimeout(startScreenSlicing, 1000);
+            };
             document.body.appendChild(script);
         }
     </script>
