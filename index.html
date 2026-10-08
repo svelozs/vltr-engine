@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>VLTR Engine</title>
+    <title>VLTR Custom Console</title>
     
-    <!-- Modos PWA / Pantalla completa para eliminar barras de navegación en iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#000000">
 
     <style>
         * {
@@ -17,112 +15,144 @@
             user-select: none;
             -webkit-user-select: none;
         }
+
         body, html {
             margin: 0;
             padding: 0;
             width: 100vw;
-            height: 100dvh; /* Utiliza Dynamic Viewport Height para evitar la barra de Safari */
-            background-color: #000;
-            overflow: hidden;
-            touch-action: none;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* --- CONTENEDOR DE PANTALLAS NDS (75% DE LA PANTALLA) --- */
-        #game-container {
-            width: 100vw;
-            height: 75dvh;
-            position: relative;
-            background-color: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* Lienzo de juego (Canvas nativo de NDS) */
-        #game-container canvas {
-            max-width: 100% !important;
-            max-height: 100% !important;
-            object-fit: contain !important;
-            pointer-events: auto !important; /* Mantiene activa la pantalla táctil de NDS */
-            touch-action: none !important;
-        }
-
-        /* --- ÁREA DE CONTROLES INFERIOR (25% DE LA PANTALLA) --- */
-        #controls-container {
-            width: 100vw;
-            height: 25dvh;
-            background-color: #0a0a0a;
-            border-top: 1px solid #222;
-            position: relative;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 10px;
-        }
-
-        /* SPLASH SCREEN (Resuelve la política de AudioContext de Safari) */
-        #splash-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
             height: 100dvh;
             background-color: #000;
-            color: #fff;
+            overflow: hidden;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 99999;
-            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        /* CONTENEDOR PRINCIPAL DE LA CARCASA (Mantiene la proporción del teléfono) */
+        #console-container {
+            position: relative;
+            width: 100vw;
+            height: 100dvh;
+            max-width: 430px; /* Tamaño máximo iPhone Pro Max */
+            background: url('assets/skin.png') no-repeat center center;
+            background-size: contain; /* O cover según la imagen */
+        }
+
+        /* --- 1. PANTALLAS DEL JUEGO (DENTRO DE LOS MARCOS) --- */
+        #game-screen {
+            position: absolute;
+            top: 2%;         /* AJUSTAR: Distancia desde arriba */
+            left: 10%;        /* AJUSTAR: Distancia desde la izquierda */
+            width: 80%;       /* AJUSTAR: Ancho de las pantallas */
+            height: 52%;      /* AJUSTAR: Alto total de las dos pantallas de NDS */
+            pointer-events: auto;
+            z-index: 5;
+        }
+
+        #game-screen canvas {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: fill !important;
+        }
+
+        /* --- 2. ÁREAS TÁCTILES INVISIBLES (HITBOXES) --- */
+        .touch-zone {
+            position: absolute;
+            z-index: 10;
             cursor: pointer;
         }
 
-        /* Ocultar elementos sobrantes de EmulatorJS */
-        #ejs-menu, .ejs-footer, .ejs-header {
-            display: none !important;
+        /* ========================================================
+           MODO CALIBRACIÓN: Cambia a 'transparent' cuando termines
+           ======================================================== */
+        .debug-mode .touch-zone {
+            background: rgba(255, 0, 0, 0.4) !important;
+            border: 1px solid red !important;
+        }
+
+        /* --- 3. COORDENADAS EXACTAS DE LOS BOTONES --- */
+        /* Ajusta estos valores % según la carcasa que estés usando */
+
+        /* CRUCETA (D-PAD) */
+        #btn-dpad {
+            top: 75%;
+            left: 7%;
+            width: 32%;
+            height: 16%;
+            border-radius: 20%;
+        }
+
+        /* BOTONES DE ACCIÓN (ABXY) */
+        #btn-a { top: 81%; left: 81%; width: 13%; height: 6.5%; border-radius: 50%; }
+        #btn-b { top: 88.5%; left: 72%; width: 13%; height: 6.5%; border-radius: 50%; }
+        #btn-x { top: 73.5%; left: 72%; width: 13%; height: 6.5%; border-radius: 50%; }
+        #btn-y { top: 81%; left: 63%; width: 13%; height: 6.5%; border-radius: 50%; }
+
+        /* GATILLOS SUPERIORES L y R */
+        #btn-l { top: 38%; left: 5%; width: 18%; height: 4%; }
+        #btn-r { top: 38%; right: 5%; width: 18%; height: 4%; }
+
+        /* START Y SELECT (- y +) */
+        #btn-minus { top: 65%; left: 5%; width: 10%; height: 5%; }
+        #btn-plus { top: 65%; right: 5%; width: 10%; height: 5%; }
+
+        /* SPLASH SCREEN DE ENCENDIDO */
+        #splash-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100dvh;
+            background: #000; color: #fff;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 9999;
+            font-family: sans-serif;
         }
     </style>
 </head>
-<body>
+<body class="debug-mode"> <!-- QUITA 'debug-mode' PARA OCULTAR LOS CUADROS ROJOS -->
 
-    <!-- Pantalla de inicio -->
-    <div id="splash-screen" onclick="bootSystem()">
-        <h1 style="font-size: 1.1rem; letter-spacing: 2px;">VLTR ENGINE</h1>
-        <p style="font-size: 0.8rem; color: #666;">TOCA PARA INICIAR</p>
+    <!-- Pantalla de inicio para desbloquear audio en iOS -->
+    <div id="splash-screen" onclick="bootCartridge()">
+        <h2>VLTR SYSTEM</h2>
+        <p style="color:#888;">TOCA PARA ENCENDER</p>
     </div>
 
-    <!-- Área del Juego (75%) -->
-    <div id="game-container">
-        <div id="game" style="width:100%; height:100%;"></div>
-    </div>
+    <!-- CARCASA DE NINTENDO DS -->
+    <div id="console-container">
 
-    <!-- Área de Controles Custom (25%) -->
-    <div id="controls-container">
-        <!-- Espacio reservado para los botones personalizados -->
+        <!-- Área de las pantallas de la NDS -->
+        <div id="game-screen">
+            <div id="game" style="width:100%; height:100%;"></div>
+        </div>
+
+        <!-- Botones Invisibles colocados encima de la carcasa -->
+        <div id="btn-dpad" class="touch-zone"></div>
+        <div id="btn-a" class="touch-zone"></div>
+        <div id="btn-b" class="touch-zone"></div>
+        <div id="btn-x" class="touch-zone"></div>
+        <div id="btn-y" class="touch-zone"></div>
+        <div id="btn-l" class="touch-zone"></div>
+        <div id="btn-r" class="touch-zone"></div>
+        <div id="btn-minus" class="touch-zone"></div>
+        <div id="btn-plus" class="touch-zone"></div>
+
     </div>
 
     <script>
-        function bootSystem() {
-            // 1. Ocultar Splash
+        function bootCartridge() {
             document.getElementById('splash-screen').style.display = 'none';
 
-            // 2. Definir variables de configuración
             window.EJS_player = '#game';
             window.EJS_core = 'nds';
-            window.EJS_gameName = 'System Core';
+            window.EJS_gameName = 'VLTR Core';
             window.EJS_color = '#000000';
             window.EJS_startOnLoaded = true;
             window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
             window.EJS_gameUrl = 'roms/sys_data_01.dat';
             window.EJS_defaultMenu = false;
 
-            // 3. Inyección diferida del script para bypass de autoplay
-            const loaderScript = document.createElement('script');
-            loaderScript.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
-            document.body.appendChild(loaderScript);
+            const script = document.createElement('script');
+            script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+            document.body.appendChild(script);
         }
     </script>
 </body>
