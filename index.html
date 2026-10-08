@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pokémon Edición Platino</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #111;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+        #display-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="display-container">
+        <div id="game"></div>
+    </div>
+
+    <script>
+        // Configuración de EmulatorJS para Nintendo DS
+        EJS_player = '#game';
+        EJS_core = 'nds'; // Núcleo para Nintendo DS (DeSmuME / MelonDS)
+        EJS_gameName = 'Pokemon Platinum';
+        EJS_color = '#d12424'; // Color del tema de la interfaz
+        EJS_startOnLoaded = true;
+        EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+        
+        // Ruta a tu ROM comprimida
+        EJS_gameUrl = 'roms/p_plat.dat.zip'; 
+
+        // Habilitar guardado automático en el navegador (IndexedDB)
+        EJS_onSave = function(data) {
+            console.log("Progreso guardado automáticamente.");
+        };
+    </script>
+    
+    <!-- Carga del script ejecutable del emulador -->
+    <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
+
+</body>
+</html>
