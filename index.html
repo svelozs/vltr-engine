@@ -2,56 +2,69 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pokémon Edición Platino</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Web System Core</title>
+
+    <!-- Parámetros para modo App Nativa en iOS/Android -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+
     <style>
         * {
             box-sizing: border-box;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: #111;
+            background-color: #000;
             overflow: hidden;
-            font-family: sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        #display-container {
+        #game {
             width: 100vw;
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
     </style>
 </head>
 <body>
 
-    <div id="display-container">
-        <div id="game"></div>
-    </div>
+    <div id="game"></div>
 
     <script>
-        // Configuración de EmulatorJS para Nintendo DS
-        EJS_player = '#game';
-        EJS_core = 'nds'; // Núcleo para Nintendo DS (DeSmuME / MelonDS)
-        EJS_gameName = 'Pokemon Platinum';
-        EJS_color = '#d12424'; // Color del tema de la interfaz
-        EJS_startOnLoaded = true;
-        EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-        
-        // Ruta a tu ROM comprimida
-        EJS_gameUrl = 'roms/p_plat.dat.zip'; 
+        const DB = {
+            'p01': 'sys_data_01.dat', // Pokémon Platino
+            'm01': 'sys_data_02.dat', // Próximo juego
+        };
 
-        // Habilitar guardado automático en el navegador (IndexedDB)
+        // Captura el parámetro ?id= de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const coreId = urlParams.get('id') || 'p01'; // 'p01' por defecto si abre sin parámetros
+
+        // Obtiene el archivo correspondiente
+        const targetCore = DB[coreId] || 'sys_data_01.dat';
+
+        // Configuración con nomenclatura neutra
+        EJS_player = '#game';
+        EJS_core = 'nds';
+        EJS_gameName = 'Core System ' + coreId.toUpperCase();
+        EJS_color = '#151515';
+        EJS_startOnLoaded = true;
+        EJS_pathtodata = 'https://cdn.jsdelivr.net/gh/emulatorjs/emulatorjs@latest/data/';
+        
+        // Carga el archivo .dat
+        EJS_gameUrl = 'roms/' + targetCore;
+
         EJS_onSave = function(data) {
-            console.log("Progreso guardado automáticamente.");
+            console.log("Core state saved.");
         };
     </script>
-    
-    <!-- Carga del script ejecutable del emulador -->
-    <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/emulatorjs/emulatorjs@latest/data/loader.js"></script>
 
 </body>
 </html>
