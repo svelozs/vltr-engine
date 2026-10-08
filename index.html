@@ -2,20 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Web System Core</title>
-
-    <!-- Parámetros para modo App Nativa en iOS/Android -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
-
     <style>
-        * {
-            box-sizing: border-box;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
         body, html {
             margin: 0;
             padding: 0;
@@ -23,8 +12,6 @@
             height: 100%;
             background-color: #000;
             overflow: hidden;
-            user-select: none;
-            -webkit-user-select: none;
         }
         #game {
             width: 100vw;
@@ -37,34 +24,15 @@
     <div id="game"></div>
 
     <script>
-        const DB = {
-            'p01': 'sys_data_01.dat', // Pokémon Platino
-            'm01': 'sys_data_02.dat', // Próximo juego
-        };
-
-        // Captura el parámetro ?id= de la URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const coreId = urlParams.get('id') || 'p01'; // 'p01' por defecto si abre sin parámetros
-
-        // Obtiene el archivo correspondiente
-        const targetCore = DB[coreId] || 'sys_data_01.dat';
-
-        // Configuración con nomenclatura neutra
         EJS_player = '#game';
         EJS_core = 'nds';
-        EJS_gameName = 'Core System ' + coreId.toUpperCase();
+        EJS_gameName = 'System Core';
         EJS_color = '#151515';
         EJS_startOnLoaded = true;
-        EJS_pathtodata = 'https://cdn.jsdelivr.net/gh/emulatorjs/emulatorjs@latest/data/';
-        
-        // Carga el archivo .dat
-        EJS_gameUrl = 'roms/' + targetCore;
-
-        EJS_onSave = function(data) {
-            console.log("Core state saved.");
-        };
+        EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+        EJS_gameUrl = 'roms/sys_data_01.dat';
     </script>
-    <script src="https://cdn.jsdelivr.net/gh/emulatorjs/emulatorjs@latest/data/loader.js"></script>
+    <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
 
 </body>
 </html>
